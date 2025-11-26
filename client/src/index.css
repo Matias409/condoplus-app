@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+    --color-primary: #FF6B35;
+    --color-success: #4ADE80;
+    --color-warning: #F472B6;
+    --color-pending: #FCD34D;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
