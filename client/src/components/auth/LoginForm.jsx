@@ -59,10 +59,10 @@ export default function LoginForm() {
     }
 
     return (
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-            <div className="text-center mb-8">
+        <div className="w-full max-w-md">
+            <div className="text-left mb-8">
                 <h2 className="text-3xl font-bold text-gray-900">CondoPlus</h2>
-                <p className="text-gray-500 mt-2">Inicia sesión en tu cuenta</p>
+                <p className="text-gray-500 mt-2">Bienvenido de nuevo. Por favor ingresa tus datos.</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -75,7 +75,7 @@ export default function LoginForm() {
                         <input
                             type="email"
                             {...register('email')}
-                            className={`block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg focus:outline-none focus:ring-1 transition-colors`}
+                            className={`block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#FF5722] focus:border-[#FF5722]'} rounded-lg focus:outline-none focus:ring-1 transition-colors`}
                             placeholder="tu@email.com"
                         />
                     </div>
@@ -91,7 +91,7 @@ export default function LoginForm() {
                         <input
                             type="password"
                             {...register('password')}
-                            className={`block w-full pl-10 pr-3 py-2 border ${errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary focus:border-primary'} rounded-lg focus:outline-none focus:ring-1 transition-colors`}
+                            className={`block w-full pl-10 pr-3 py-2 border ${errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#FF5722] focus:border-[#FF5722]'} rounded-lg focus:outline-none focus:ring-1 transition-colors`}
                             placeholder="••••••••"
                         />
                     </div>
@@ -104,7 +104,7 @@ export default function LoginForm() {
                             id="remember-me"
                             name="remember-me"
                             type="checkbox"
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
+                            className="h-4 w-4 text-[#FF5722] focus:ring-[#FF5722] border-gray-300 rounded cursor-pointer"
                         />
                         <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
                             Recordarme
@@ -112,7 +112,7 @@ export default function LoginForm() {
                     </div>
 
                     <div className="text-sm">
-                        <a href="#" className="font-medium text-primary hover:text-orange-600 transition-colors">
+                        <a href="#" className="font-medium text-[#FF5722] hover:text-orange-700 transition-colors">
                             ¿Olvidaste tu contraseña?
                         </a>
                     </div>
@@ -121,7 +121,7 @@ export default function LoginForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
+                    className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#FF5722] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF5722] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
                 >
                     {isLoading ? (
                         <div className="flex items-center">
@@ -135,15 +135,6 @@ export default function LoginForm() {
                         'Iniciar Sesión'
                     )}
                 </button>
-
-                <div className="text-center mt-4">
-                    <p className="text-sm text-gray-600">
-                        ¿No tienes cuenta?{' '}
-                        <a href="#" className="font-medium text-primary hover:text-orange-600 transition-colors">
-                            Regístrate
-                        </a>
-                    </p>
-                </div>
             </form>
         </div>
     )
