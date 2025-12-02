@@ -152,7 +152,11 @@ export default function Residents() {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/api/residents/invite', {
+            // In production (Vercel), use relative path. In dev, use env variable or localhost
+            const backendUrl = import.meta.env.PROD
+                ? ''
+                : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001')
+            const response = await fetch(`${backendUrl}/api/residents/invite`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
