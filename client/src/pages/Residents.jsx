@@ -82,7 +82,6 @@ export default function Residents() {
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [createFormData, setCreateFormData] = useState({
         email: '',
-        password: '',
         full_name: '',
         rut: '',
         unit_id: '',
@@ -147,64 +146,30 @@ export default function Residents() {
         e.preventDefault()
 
         // Validate required fields
-        if (!createFormData.email || !createFormData.password || !createFormData.full_name) {
-            toast.error('Email, contraseña y nombre son obligatorios')
+        if (!createFormData.email || !createFormData.full_name) {
+            toast.error('Email y nombre son obligatorios')
             return
         }
 
         try {
-            // 1. Create temporary client to avoid logging out admin
-            const tempSupabase = createClient(
-                import.meta.env.VITE_SUPABASE_URL,
-                import.meta.env.VITE_SUPABASE_ANON_KEY,
-                {
-                    auth: {
-                        persistSession: false, // Critical: Don't overwrite admin session
-                        autoRefreshToken: false,
-                        detectSessionInUrl: false
-                    }
-                }
-            )
-
-            // 2. Sign up the new user
-            const { data: authData, error: authError } = await tempSupabase.auth.signUp({
-                email: createFormData.email,
-                password: createFormData.password,
-                options: {
-                    data: {
-                        full_name: createFormData.full_name,
-                        role: 'resident' // Important for RLS
-                    }
-                }
+            const response = await fetch('http://localhost:3001/api/residents/invite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(createFormData)
             })
 
-            if (authError) throw authError
-            if (!authData.user) throw new Error('No se pudo crear el usuario')
+            const data = await response.json()
 
-            // 3. Update the public.users profile with extra details
-            // We use the main 'supabase' client (admin) to ensure we have permission to update
-            // We use upsert to handle cases where trigger might or might not have created the row
-            const { error: profileError } = await supabase
-                .from('users')
-                .upsert({
-                    id: authData.user.id,
-                    email: createFormData.email,
-                    full_name: createFormData.full_name,
-                    rut: createFormData.rut,
-                    unit_id: createFormData.unit_id,
-                    phone: createFormData.phone,
-                    user_type: createFormData.user_type,
-                    role: 'resident',
-                    status: 'Activo'
-                })
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al enviar invitación')
+            }
 
-            if (profileError) throw profileError
-
-            toast.success('Residente creado exitosamente')
+            toast.success('Invitación enviada correctamente')
             setShowCreateModal(false)
             setCreateFormData({
                 email: '',
-                password: '',
                 full_name: '',
                 rut: '',
                 unit_id: '',
@@ -215,7 +180,7 @@ export default function Residents() {
 
         } catch (error) {
             console.error('Error creating resident:', error)
-            toast.error('Error al crear residente: ' + error.message)
+            toast.error('Error: ' + error.message)
         }
     }
 
@@ -386,18 +351,7 @@ export default function Residents() {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={6}
-                                    value={createFormData.password}
-                                    onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Mínimo 6 caracteres"
-                                />
-                            </div>
+
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
@@ -469,7 +423,7 @@ export default function Residents() {
                                     type="submit"
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
                                 >
-                                    Crear Residente
+                                    Enviar Invitación
                                 </button>
                             </div>
                         </form>
