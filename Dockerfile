@@ -1,18 +1,19 @@
-FROM node:18-alpine
+FROM node:18
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy server package files
+# Copy package files
 COPY server/package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --only=production
 
-# Copy server source
-COPY server/ ./
+# Copy all server files
+COPY server/src ./src
+COPY server/.env.example ./.env.example
 
 # Expose port
 EXPOSE 3001
 
-# Start server
-CMD ["npm", "start"]
+# Start
+CMD [ "node", "src/index.js" ]
