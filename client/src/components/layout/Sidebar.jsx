@@ -56,8 +56,9 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
             <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#1E293B] text-white transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex flex-col h-full">
                     {/* Logo */}
-                    <div className="flex items-center justify-center h-16 px-4 bg-[#0F172A]">
-                        <h1 className="text-xl font-bold tracking-wider">CondoPlus</h1>
+                    <div className="flex items-center justify-center h-20 px-4 bg-[#0F172A] gap-3">
+                        <img src="/condoplus-logo.jpg" alt="CondoPlus" className="h-10 w-10 rounded-lg" />
+                        <span className="text-xl font-bold tracking-wider text-white">CondoPlus</span>
                     </div>
 
                     {/* Navigation */}

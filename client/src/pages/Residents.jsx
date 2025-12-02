@@ -8,6 +8,7 @@ import {
     XMarkIcon
 } from '@heroicons/react/24/outline'
 import { supabase } from '../config/supabase'
+import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
 
 const ResidentCard = ({ resident, onEdit }) => (
@@ -65,14 +66,28 @@ export default function Residents() {
     const [residents, setResidents] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+
+    // Edit State
     const [editingResident, setEditingResident] = useState(null)
-    const [formData, setFormData] = useState({
+    const [editFormData, setEditFormData] = useState({
         full_name: '',
         rut: '',
         unit_id: '',
         phone: '',
         user_type: 'Propietario',
         status: 'Activo'
+    })
+
+    // Create State
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [createFormData, setCreateFormData] = useState({
+        email: '',
+        password: '',
+        full_name: '',
+        rut: '',
+        unit_id: '',
+        phone: '',
+        user_type: 'Propietario'
     })
 
     useEffect(() => {
@@ -84,7 +99,7 @@ export default function Residents() {
             const { data, error } = await supabase
                 .from('users')
                 .select('*')
-                .neq('role', 'admin') // Opcional: Ocultar admins si se desea
+                .neq('role', 'admin')
                 .order('created_at', { ascending: false })
 
             if (error) throw error
@@ -99,7 +114,7 @@ export default function Residents() {
 
     const handleEditClick = (resident) => {
         setEditingResident(resident)
-        setFormData({
+        setEditFormData({
             full_name: resident.full_name || '',
             rut: resident.rut || '',
             unit_id: resident.unit_id || '',
@@ -114,7 +129,7 @@ export default function Residents() {
         try {
             const { error } = await supabase
                 .from('users')
-                .update(formData)
+                .update(editFormData)
                 .eq('id', editingResident.id)
 
             if (error) throw error
@@ -128,6 +143,82 @@ export default function Residents() {
         }
     }
 
+    const handleCreate = async (e) => {
+        e.preventDefault()
+
+        // Validate required fields
+        if (!createFormData.email || !createFormData.password || !createFormData.full_name) {
+            toast.error('Email, contraseña y nombre son obligatorios')
+            return
+        }
+
+        try {
+            // 1. Create temporary client to avoid logging out admin
+            const tempSupabase = createClient(
+                import.meta.env.VITE_SUPABASE_URL,
+                import.meta.env.VITE_SUPABASE_ANON_KEY,
+                {
+                    auth: {
+                        persistSession: false, // Critical: Don't overwrite admin session
+                        autoRefreshToken: false,
+                        detectSessionInUrl: false
+                    }
+                }
+            )
+
+            // 2. Sign up the new user
+            const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+                email: createFormData.email,
+                password: createFormData.password,
+                options: {
+                    data: {
+                        full_name: createFormData.full_name,
+                        role: 'resident' // Important for RLS
+                    }
+                }
+            })
+
+            if (authError) throw authError
+            if (!authData.user) throw new Error('No se pudo crear el usuario')
+
+            // 3. Update the public.users profile with extra details
+            // We use the main 'supabase' client (admin) to ensure we have permission to update
+            // We use upsert to handle cases where trigger might or might not have created the row
+            const { error: profileError } = await supabase
+                .from('users')
+                .upsert({
+                    id: authData.user.id,
+                    email: createFormData.email,
+                    full_name: createFormData.full_name,
+                    rut: createFormData.rut,
+                    unit_id: createFormData.unit_id,
+                    phone: createFormData.phone,
+                    user_type: createFormData.user_type,
+                    role: 'resident',
+                    status: 'Activo'
+                })
+
+            if (profileError) throw profileError
+
+            toast.success('Residente creado exitosamente')
+            setShowCreateModal(false)
+            setCreateFormData({
+                email: '',
+                password: '',
+                full_name: '',
+                rut: '',
+                unit_id: '',
+                phone: '',
+                user_type: 'Propietario'
+            })
+            fetchResidents()
+
+        } catch (error) {
+            console.error('Error creating resident:', error)
+            toast.error('Error al crear residente: ' + error.message)
+        }
+    }
+
     const filteredResidents = residents.filter(r =>
         (r.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (r.unit_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -138,11 +229,18 @@ export default function Residents() {
     return (
         <div className="w-full h-full p-6 lg:p-8">
             {/* Header */}
-            <div className="md:flex md:items-center md:justify-between mb-6">
-                <div className="flex-1 min-w-0">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
                     <h2 className="text-2xl font-bold text-gray-900">Directorio de Residentes</h2>
                     <p className="mt-1 text-sm text-gray-500">Gestión de propietarios y arrendatarios</p>
                 </div>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full md:w-auto"
+                >
+                    <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+                    Nuevo Residente
+                </button>
             </div>
 
             {/* Filters */}
@@ -179,7 +277,7 @@ export default function Residents() {
             {/* Edit Modal */}
             {editingResident && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="text-xl font-bold text-gray-900">Editar Residente</h3>
                             <button onClick={() => setEditingResident(null)} className="text-gray-400 hover:text-gray-600">
@@ -192,8 +290,8 @@ export default function Residents() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
                                 <input
                                     type="text"
-                                    value={formData.full_name}
-                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                    value={editFormData.full_name}
+                                    onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
@@ -203,8 +301,8 @@ export default function Residents() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">RUT (ID)</label>
                                     <input
                                         type="text"
-                                        value={formData.rut}
-                                        onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
+                                        value={editFormData.rut}
+                                        onChange={(e) => setEditFormData({ ...editFormData, rut: e.target.value })}
                                         placeholder="12.345.678-9"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
@@ -213,8 +311,8 @@ export default function Residents() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Unidad (Depto)</label>
                                     <input
                                         type="text"
-                                        value={formData.unit_id}
-                                        onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                                        value={editFormData.unit_id}
+                                        onChange={(e) => setEditFormData({ ...editFormData, unit_id: e.target.value })}
                                         placeholder="A-101"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
@@ -226,16 +324,16 @@ export default function Residents() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                                     <input
                                         type="text"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        value={editFormData.phone}
+                                        onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                                     <select
-                                        value={formData.user_type}
-                                        onChange={(e) => setFormData({ ...formData, user_type: e.target.value })}
+                                        value={editFormData.user_type}
+                                        onChange={(e) => setEditFormData({ ...editFormData, user_type: e.target.value })}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="Propietario">Propietario</option>
@@ -257,6 +355,121 @@ export default function Residents() {
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
                                 >
                                     Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Create Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-gray-900">Nuevo Residente</h3>
+                            <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <XMarkIcon className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreate} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={createFormData.email}
+                                    onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="correo@ejemplo.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
+                                <input
+                                    type="password"
+                                    required
+                                    minLength={6}
+                                    value={createFormData.password}
+                                    onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Mínimo 6 caracteres"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={createFormData.full_name}
+                                    onChange={(e) => setCreateFormData({ ...createFormData, full_name: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Juan Pérez"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">RUT (ID)</label>
+                                    <input
+                                        type="text"
+                                        value={createFormData.rut}
+                                        onChange={(e) => setCreateFormData({ ...createFormData, rut: e.target.value })}
+                                        placeholder="12.345.678-9"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Unidad (Depto)</label>
+                                    <input
+                                        type="text"
+                                        value={createFormData.unit_id}
+                                        onChange={(e) => setCreateFormData({ ...createFormData, unit_id: e.target.value })}
+                                        placeholder="A-101"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                    <input
+                                        type="text"
+                                        value={createFormData.phone}
+                                        onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                                    <select
+                                        value={createFormData.user_type}
+                                        onChange={(e) => setCreateFormData({ ...createFormData, user_type: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="Propietario">Propietario</option>
+                                        <option value="Arrendatario">Arrendatario</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex gap-3 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
+                                >
+                                    Crear Residente
                                 </button>
                             </div>
                         </form>

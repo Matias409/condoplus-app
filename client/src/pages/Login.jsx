@@ -31,8 +31,8 @@ export default function Login() {
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-end h-full p-16 xl:p-24 w-full">
                     <div className="mb-8">
-                        <div className="h-12 w-12 bg-[#FF5722] rounded-lg flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20">
-                            <HomeIcon className="h-8 w-8 text-white" />
+                        <div className="mb-6">
+                            <img src="/condoplus-logo.jpg" alt="CondoPlus Logo" className="h-24 w-auto rounded-xl shadow-lg shadow-orange-500/20" />
                         </div>
                         <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
                             Gestión inteligente para<br />
