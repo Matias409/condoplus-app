@@ -5,6 +5,9 @@
         "api"
     ],
     "scripts": {
-        "build": "cd client && npm install && npm run build"
+        "build": "cd client && npm install && npm run build && cd .. && mkdir -p dist && cp -r client/dist/* dist/"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.86.0"
     }
 }
