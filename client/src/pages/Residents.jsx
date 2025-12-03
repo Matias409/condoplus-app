@@ -195,6 +195,31 @@ export default function Residents() {
         (r.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     )
 
+    const handleDelete = async (id) => {
+        if (!window.confirm('¿Estás seguro de que quieres eliminar a este residente? Esta acción no se puede deshacer.')) {
+            return
+        }
+
+        try {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+            const response = await fetch(`${backendUrl}/api/residents/${id}`, {
+                method: 'DELETE',
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.error || 'Error al eliminar residente')
+            }
+
+            toast.success('Residente eliminado correctamente')
+            setEditingResident(null)
+            fetchResidents()
+        } catch (error) {
+            console.error('Error deleting resident:', error)
+            toast.error('Error al eliminar: ' + error.message)
+        }
+    }
+
     return (
         <div className="w-full h-full p-6 lg:p-8">
             {/* Header */}
@@ -311,20 +336,29 @@ export default function Residents() {
                                 </div>
                             </div>
 
-                            <div className="pt-4 flex gap-3 justify-end">
+                            <div className="pt-4 flex justify-between items-center">
                                 <button
                                     type="button"
-                                    onClick={() => setEditingResident(null)}
-                                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                                    onClick={() => handleDelete(editingResident.id)}
+                                    className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-colors border border-red-200"
                                 >
-                                    Cancelar
+                                    Eliminar Residente
                                 </button>
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
-                                >
-                                    Guardar Cambios
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingResident(null)}
+                                        className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
+                                    >
+                                        Guardar Cambios
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>

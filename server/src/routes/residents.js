@@ -75,4 +75,38 @@ router.post('/invite', async (req, res) => {
     }
 });
 
+// DELETE /api/residents/:id
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ error: 'User ID is required' });
+
+        console.log('Deleting user:', id);
+
+        // 1. Delete from Supabase Auth
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+
+        if (authError) {
+            console.error('Supabase Delete Error:', authError);
+            return res.status(400).json({ error: authError.message });
+        }
+
+        // 2. Delete from public.users (explicitly, though auth cascade might handle it)
+        const { error: profileError } = await supabaseAdmin
+            .from('users')
+            .delete()
+            .eq('id', id);
+
+        if (profileError) {
+            console.error('Profile Delete Error:', profileError);
+        }
+
+        res.json({ message: 'Usuario eliminado correctamente' });
+
+    } catch (error) {
+        console.error('Server Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 export default router;
