@@ -196,17 +196,20 @@ export default function Residents() {
     )
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de que quieres eliminar a este residente?')) {
+        if (!window.confirm('¿Estás seguro de que quieres eliminar a este residente? Esta acción no se puede deshacer.')) {
             return
         }
 
         try {
-            const { error } = await supabase
-                .from('users')
-                .delete()
-                .eq('id', id)
+            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || ''
+            const response = await fetch(`${backendUrl}/api/residents/${id}`, {
+                method: 'DELETE',
+            })
 
-            if (error) throw error
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.error || 'Error al eliminar residente')
+            }
 
             toast.success('Residente eliminado correctamente')
             setEditingResident(null)
