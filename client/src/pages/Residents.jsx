@@ -82,7 +82,6 @@ export default function Residents() {
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [createFormData, setCreateFormData] = useState({
         email: '',
-        password: '',
         full_name: '',
         rut: '',
         unit_id: '',
@@ -387,18 +386,7 @@ export default function Residents() {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
-                                <input
-                                    type="password"
-                                    required
-                                    minLength={6}
-                                    value={createFormData.password}
-                                    onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Mínimo 6 caracteres"
-                                />
-                            </div>
+
 
 
 
@@ -472,7 +460,7 @@ export default function Residents() {
                                     type="submit"
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
                                 >
-                                    Crear Residente
+                                    Enviar Invitación
                                 </button>
                             </div>
                         </form>
