@@ -153,8 +153,9 @@ export default function Residents() {
 
         try {
             // Call backend to invite user
-            // In production (Vercel/Railway), use relative path or env var. In dev, use localhost
-            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || ''
+            // Use env var or fallback to Render URL directly
+            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || 'https://condoplus-server.onrender.com'
+            console.log('Using Backend URL:', backendUrl)
 
             const response = await fetch(`${backendUrl}/api/residents/invite`, {
                 method: 'POST',
@@ -201,7 +202,7 @@ export default function Residents() {
         }
 
         try {
-            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || ''
+            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || 'https://condoplus-server.onrender.com'
             const response = await fetch(`${backendUrl}/api/residents/${id}`, {
                 method: 'DELETE',
             })
