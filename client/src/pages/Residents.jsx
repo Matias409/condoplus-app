@@ -152,10 +152,10 @@ export default function Residents() {
         }
 
         try {
-            // In production (Vercel), use relative path. In dev, use env variable or localhost
-            const backendUrl = import.meta.env.PROD
-                ? ''
-                : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001')
+            // Call backend to invite user
+            // In production (Vercel/Railway), use relative path or env var. In dev, use localhost
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+
             const response = await fetch(`${backendUrl}/api/residents/invite`, {
                 method: 'POST',
                 headers: {
@@ -183,8 +183,8 @@ export default function Residents() {
             fetchResidents()
 
         } catch (error) {
-            console.error('Error creating resident:', error)
-            toast.error('Error: ' + error.message)
+            console.error('Error inviting resident:', error)
+            toast.error('Error al invitar residente: ' + error.message)
         }
     }
 

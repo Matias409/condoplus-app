@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const router = express.Router();
 
 // Initialize Supabase Admin Client
-// NOTE: This requires SUPABASE_SERVICE_ROLE_KEY in .env
+// We need the SERVICE_ROLE_KEY to bypass RLS and invite users
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -28,12 +28,14 @@ router.post('/invite', async (req, res) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
+        console.log('Inviting user:', email);
+
         // 1. Invite user via Supabase Auth
         // This sends an email to the user with a link to set their password
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             data: {
                 full_name,
-                role: 'resident' // Metadata for RLS
+                role: 'resident' // Metadata
             }
         });
 
@@ -42,8 +44,10 @@ router.post('/invite', async (req, res) => {
             return res.status(400).json({ error: authError.message });
         }
 
+        console.log('User invited successfully:', authData.user.id);
+
         // 2. Update/Upsert the public.users profile
-        // The trigger might handle this, but we want to ensure all fields (rut, unit, etc.) are set
+        // We do this immediately to ensure the user has a profile even before they accept the invite
         const { error: profileError } = await supabaseAdmin
             .from('users')
             .upsert({
@@ -55,7 +59,7 @@ router.post('/invite', async (req, res) => {
                 phone: phone,
                 user_type: user_type,
                 role: 'resident',
-                status: 'Activo' // Or 'Pendiente' if you prefer
+                status: 'Activo' // Or 'Pendiente'
             });
 
         if (profileError) {
