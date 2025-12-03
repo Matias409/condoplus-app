@@ -207,8 +207,14 @@ export default function Residents() {
             })
 
             if (!response.ok) {
-                const data = await response.json()
-                throw new Error(data.error || 'Error al eliminar residente')
+                const text = await response.text()
+                console.error('API Error Response:', text)
+                try {
+                    const data = JSON.parse(text)
+                    throw new Error(data.error || 'Error al eliminar residente')
+                } catch (e) {
+                    throw new Error(`Error del servidor (${response.status}): ${text.substring(0, 100)}...`)
+                }
             }
 
             toast.success('Residente eliminado correctamente')
