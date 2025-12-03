@@ -9,5 +9,10 @@
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.86.0"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-x64-gnu": "*",
+        "@esbuild/linux-x64": "*",
+        "lightningcss-linux-x64-gnu": "*"
     }
 }
