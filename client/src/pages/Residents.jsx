@@ -146,15 +146,15 @@ export default function Residents() {
         e.preventDefault()
 
         // Validate required fields
-        if (!createFormData.email || !createFormData.password || !createFormData.full_name) {
-            toast.error('Email, contraseña y nombre son obligatorios')
+        if (!createFormData.email || !createFormData.full_name) {
+            toast.error('Email y nombre son obligatorios')
             return
         }
 
         try {
             // Call backend to invite user
             // In production (Vercel/Railway), use relative path or env var. In dev, use localhost
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
+            const backendUrl = import.meta.env.VITE_VERCEL_API_URL || ''
 
             const response = await fetch(`${backendUrl}/api/residents/invite`, {
                 method: 'POST',
