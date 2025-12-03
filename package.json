@@ -5,7 +5,7 @@
         "api"
     ],
     "scripts": {
-        "build": "npm install @rollup/rollup-linux-x64-gnu @esbuild/linux-x64 lightningcss-linux-x64-gnu --no-save && cd client && npm run build && cd .. && mkdir -p dist && cp -r client/dist/* dist/"
+        "build": "cd client && npm install && npm run build && cd .. && mkdir -p dist && cp -r client/dist/* dist/"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.86.0"
