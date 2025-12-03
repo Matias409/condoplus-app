@@ -87,8 +87,14 @@ router.delete('/:id', async (req, res) => {
         const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
 
         if (authError) {
-            console.error('Supabase Delete Error:', authError);
-            return res.status(400).json({ error: authError.message });
+            // If user is not found in Auth, we should still try to delete from public.users
+            // to clean up any inconsistencies.
+            if (authError.message.includes('User not found') || authError.status === 404) {
+                console.warn('User not found in Auth, proceeding to delete profile:', id);
+            } else {
+                console.error('Supabase Delete Error:', authError);
+                return res.status(400).json({ error: authError.message });
+            }
         }
 
         // 2. Delete from public.users (explicitly, though auth cascade might handle it)
