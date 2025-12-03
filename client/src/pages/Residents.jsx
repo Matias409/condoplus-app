@@ -147,8 +147,8 @@ export default function Residents() {
         e.preventDefault()
 
         // Validate required fields
-        if (!createFormData.email || !createFormData.full_name) {
-            toast.error('Email y nombre son obligatorios')
+        if (!createFormData.email || !createFormData.password || !createFormData.full_name) {
+            toast.error('Email, contraseña y nombre son obligatorios')
             return
         }
 
